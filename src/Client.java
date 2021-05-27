@@ -1,8 +1,6 @@
 import java.net.*;
 import java.util.*;
 import java.io.*;
-import javax.xml.parsers.*;
-import org.w3c.dom.*;
 
 public class Client {
 
@@ -40,7 +38,7 @@ public class Client {
     private static String scheduleString; // string to be scheduled
 
     // create server/list objects
-    private static Server largestServer;
+    private static Server smallestServer;
 
     public static void main(String[] args) throws IOException {
         setup();
@@ -55,38 +53,33 @@ public class Client {
 
             // server replies with OK after printing out a welcome message and writing system info
 
-            // setLargestServer();
-
             System.out.println("Sending REDY ...");
             writeBytes(REDY);
             System.out.println("REDY sent.");
             
+
+            System.out.println("---------------");
             while (!(stringBuffer = bfr.readLine()).contains(NONE)) {
 
                 if (stringBuffer.contains(JOBN)) {
-                    System.out.println("---------------");
-
+                    // STORE JOB DATA
                     System.out.println(stringBuffer); // print JOB info
                     fieldBuffer = stringBuffer.split(" "); /* split String into array of strings
                                                               (each string being a field of JOBN) */
 
                     Job job = new Job(fieldBuffer); // create new Job object with data from fieldBuffer
 
+
                     // get list of capable servers (state information)
                     writeBytes(GETS + " Capable " + job.core + " " + job.memory + " " + job.disk);
-                    writeBytes(OK);
-
-
 
                     // DATA _ _ message
                     stringBuffer = bfr.readLine();
                     System.out.println("DATA received : " + stringBuffer);
-
                     fieldBuffer = stringBuffer.split(" "); 
                     int numCapableServer = Integer.parseInt(fieldBuffer[1]); // fieldBuffer[1] -> no. of capable servers
 
-                    // send list of capable server (one at a time)
-                    writeBytes(OK); 
+                    writeBytes(OK); // confirmation for receiving DATA
 
                     ArrayList<Server> capableServersList = new ArrayList<>();
                     // System.out.println("* * List of capable servers * *");
@@ -99,38 +92,57 @@ public class Client {
                         Server capable = new Server(fieldBuffer);
                         capableServersList.add(capable);
                     }
-
-                    // QUERY SERVER EST. WAITING TIME
-                    // for (Server svr : capableServersList) {
-                    //     writeBytes(EJWT + " " + svr.type + " " + svr.id);
-                        
-                    //     readStringBuffer();
-                    //     System.out.println("Est. waiting time : " + svr.type + " " + svr.id + " | " + stringBuffer);
-                    // }
-
+                    writeBytes(OK); 
+                    stringBuffer = bfr.readLine();
 
 
                     // ALGORITHM FOR JOB SCHEDULING
                     // determines which server each job is sent/scheduled to
-                    largestServer = capableServersList.get(capableServersList.size() - 1);
-                    System.out.println("Chosen server | " + largestServer.type + " " + largestServer.id);
+                    smallestServer = capableServersList.get(0);
+                    Server optimalServer = smallestServer;
 
+                    for (int i = 0; i < capableServersList.size(); i++) {
+                        Server currServer = capableServersList.get(i);
+                        
+                        if (currServer.isBooting()) {
+                            System.out.println("Booting ...");
+                        } 
+                        else if (currServer.isIdle()) {
+                            System.out.println("Idle. Please send JOB.");
+
+                            optimalServer = capableServersList.get(i);
+                            break;
+                        }
+                        else if (currServer.isActive() && currServer.hasNoWaitingJobs() && currServer.getNumRunningJobs() > 0) {
+                            System.out.println("Running job(s) ...");
+
+                            optimalServer = capableServersList.get(i);
+                            break;
+                        } 
+                        else if (currServer.isInactive()) {
+                            System.out.println("Inactive. Boot me, please.");
+
+                            // last thing you want to do is boot a new server.
+                            optimalServer = capableServersList.get(i);
+                            break;
+                        } 
+                    }
+                    System.out.println(optimalServer.id + " " + optimalServer.type + " | " + optimalServer.getNumWaitingJobs() + " " + optimalServer.getNumRunningJobs());
+                    System.out.println(optimalServer.core + " " + optimalServer.memory + " " + optimalServer.disk);
+                    
                     System.out.println("---------------");
 
 
-
                     /* SCHEDULE JOB */
-                    scheduleString = SCHD + " " + job.id + " " + largestServer.type + " " + largestServer.id;
+                    scheduleString = SCHD + " " + job.id + " " + optimalServer.type + " " + optimalServer.id;
                     writeBytes(scheduleString);
-
-
 
                     // request new job
                     writeBytes(REDY); // send REDY for the next job
                 } 
                 else if (stringBuffer.contains(JCPL)) {
-                    writeBytes(REDY); // send REDY for the next job
-                } 
+                    writeBytes(REDY);
+                }
             }
 
             System.out.println("TERMINATING CONNECTION ...");
