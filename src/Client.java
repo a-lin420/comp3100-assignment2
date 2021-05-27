@@ -25,6 +25,7 @@ public class Client {
     private static final String REDY = "REDY";
     private static final String JOBN = "JOBN";
     private static final String JCPL = "JCPL";
+    private static final String GETS = "GETS";
     private static final String SCHD = "SCHD";
     private static final String EJWT = "EJWT";
     private static final String NONE = "NONE";
@@ -63,23 +64,23 @@ public class Client {
             while (!(stringBuffer = bfr.readLine()).contains(NONE)) {
 
                 if (stringBuffer.contains(JOBN)) {
-                    // System.out.println("---------------");
+                    System.out.println("---------------");
 
-                    // System.out.println(stringBuffer); // print JOB info
+                    System.out.println(stringBuffer); // print JOB info
                     fieldBuffer = stringBuffer.split(" "); /* split String into array of strings
                                                               (each string being a field of JOBN) */
 
                     Job job = new Job(fieldBuffer); // create new Job object with data from fieldBuffer
 
                     // get list of capable servers (state information)
-                    writeBytes("GETS Capable " + job.core + " " + job.memory + " " + job.disk + "\n");
+                    writeBytes(GETS + " Capable " + job.core + " " + job.memory + " " + job.disk);
                     writeBytes(OK);
 
 
 
                     // DATA _ _ message
                     stringBuffer = bfr.readLine();
-                    // System.out.println("DATA received : " + stringBuffer);
+                    System.out.println("DATA received : " + stringBuffer);
 
                     fieldBuffer = stringBuffer.split(" "); 
                     int numCapableServer = Integer.parseInt(fieldBuffer[1]); // fieldBuffer[1] -> no. of capable servers
@@ -112,9 +113,9 @@ public class Client {
                     // ALGORITHM FOR JOB SCHEDULING
                     // determines which server each job is sent/scheduled to
                     largestServer = capableServersList.get(capableServersList.size() - 1);
-                    // System.out.println("Chosen server | " + largestServer.type + " " + largestServer.id);
+                    System.out.println("Chosen server | " + largestServer.type + " " + largestServer.id);
 
-                    // System.out.println("---------------");
+                    System.out.println("---------------");
 
 
 
@@ -126,7 +127,6 @@ public class Client {
 
                     // request new job
                     writeBytes(REDY); // send REDY for the next job
-                    stringBuffer = bfr.readLine(); // reset stringBuffer & read next job
                 } 
                 else if (stringBuffer.contains(JCPL)) {
                     writeBytes(REDY); // send REDY for the next job
