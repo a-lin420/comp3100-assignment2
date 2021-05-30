@@ -8,8 +8,8 @@ public class Server {
     protected int core;
     protected int memory;
     protected int disk;
-    protected int numWaitingJobs;
-    protected int numRunningJobs;
+    private int numWaitingJobs;
+    private int numRunningJobs;
 
     public Server(String[] fieldBuffer) {
         this.type = fieldBuffer[0];
@@ -21,6 +21,52 @@ public class Server {
         this.disk = Integer.parseInt(fieldBuffer[6]);
         this.numWaitingJobs = Integer.parseInt(fieldBuffer[7]);
         this.numRunningJobs = Integer.parseInt(fieldBuffer[8]);
+    }
+
+    public Boolean isBooting() {
+        if ((this.state).equals("booting")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Boolean isActive() {
+        if ((this.state).equals("active")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public Boolean isInactive() {
+        if ((this.state).equals("inactive")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Boolean isIdle() {
+        if ((this.state).equals("idle")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Boolean hasNoWaitingJobs() {
+        if (this.getNumWaitingJobs() == 0) {
+            return true;
+        } 
+        return false;
+    }
+
+    public int getNumWaitingJobs() {
+        return this.numWaitingJobs;
+    }
+
+    public int getNumRunningJobs() {
+        return this.numRunningJobs;
     }
 
 }
