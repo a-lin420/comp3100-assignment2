@@ -197,22 +197,11 @@ public class Client {
             ArrayList<String> runningJobs = getRunningJobsList(active);
 
             // Find JOB with LATEST completion time
-            int latestFinishTime = 0;
-            for (String rJob : runningJobs) {
-                fieldBuffer = rJob.split(" ");
-
-                int startTime = Integer.parseInt(fieldBuffer[2]);
-                int estRunTime = Integer.parseInt(fieldBuffer[3]);
-                int estFinishTime = startTime + estRunTime;
-
-                if (estFinishTime > latestFinishTime) {
-                    latestFinishTime = estFinishTime;
-                }
-            }
+            int latestFinishTime = findLatestCompletionTime(runningJobs);
             latestCompletionTimes.add(latestFinishTime);
         }
 
-        int leastWaitingTime = latestCompletionTimes.get(leastWaitingIndex) - job.submitTime;
+        int leastWaitingTime = latestCompletionTimes.get(leastWaitingIndex) - job.submitTime; // set to first item on list
         // Find index of server with lowest est. waiting time 
         for (Integer estCompTime : latestCompletionTimes) { 
             int currJobSubmitTime = job.submitTime;
@@ -226,7 +215,7 @@ public class Client {
                 }
             } else {
                 // if the current job to be scheduled is submitted after the latest running job completes
-                //                                                              schedule it to the server
+                //                                                             schedule it to that server
                 leastWaitingIndex = latestCompletionTimes.indexOf(estCompTime);
                 break;
             }
@@ -254,6 +243,26 @@ public class Client {
             writeBytes(OK);
         }
         return runningJobs;
+    }
+
+
+    // findLatestCompletionTime | returns the latest possible completion time of running jobs in a Server
+    public static Integer findLatestCompletionTime(ArrayList<String> runningJobs) {
+        int latestFinishTime = 0;
+
+        for (String rJob : runningJobs) {
+            fieldBuffer = rJob.split(" ");
+
+            int startTime = Integer.parseInt(fieldBuffer[2]);   // job start time
+            int estRunTime = Integer.parseInt(fieldBuffer[3]);  // job estimated runtime
+            int estFinishTime = startTime + estRunTime;
+
+            // stable sort
+            if (estFinishTime > latestFinishTime) {
+                latestFinishTime = estFinishTime;
+            }
+        }
+        return latestFinishTime;
     }
 
 
