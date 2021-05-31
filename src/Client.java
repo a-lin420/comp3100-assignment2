@@ -39,7 +39,7 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-        setup();
+        initialise();
 
         try {
             writeBytes(HELO); // client sends HELO
@@ -57,9 +57,7 @@ public class Client {
             writeBytes(REDY);
             //System.out.println("REDY sent.");
             
-
             while (!(stringBuffer = bfr.readLine()).contains(NONE)) {
-
                 if (stringBuffer.contains(JOBN)) {
                     // STORE JOB DATA
                     //System.out.println(stringBuffer); // print JOB info
@@ -142,6 +140,7 @@ public class Client {
         return capableServersList;
     }
 
+
     public static Server getOptimalServer(ArrayList<Server> capableServersList, Job job) throws IOException {
         ArrayList<Server> activeNoWaitingJobs = new ArrayList<>();
         ArrayList<Server> activeServers =  new ArrayList<>(); 
@@ -173,21 +172,21 @@ public class Client {
         // ORDER OF PRIORITY (if no idle servers) 
         //    active (no waiting jobs) > inactive > active (with least waiting jobs) > booting (with least waiting jobs)
         if (!activeNoWaitingJobs.isEmpty()) {
-            return findServerWithLeastWaitingTime(activeNoWaitingJobs, job);
+            return getServerWithLeastWaitingTime(activeNoWaitingJobs, job);
         } 
         else if (!inactiveServers.isEmpty()) {
             return inactiveServers.get(0); // boot smallest
         } 
         else if (!activeServers.isEmpty()) {
-            return findLeastWaitingJobs(activeServers); // get largest possible server 
+            return getLeastWaitingJobs(activeServers); // get largest possible server 
         }
         // if ALL capable servers are BOOTING, return Server with LEAST number of WAITING jobs
-        return findLeastWaitingJobs(capableServersList);           
+        return getLeastWaitingJobs(capableServersList);           
     }
 
 
-    // findServerWithLeastWaitingTime | return the server with the 
-    public static Server findServerWithLeastWaitingTime(ArrayList<Server> activeNoWaitingJobs, Job job) throws IOException {
+    // findServerWithLeastWaitingTime | return the server with the least estimated waiting time
+    public static Server getServerWithLeastWaitingTime(ArrayList<Server> activeNoWaitingJobs, Job job) throws IOException {
         int leastWaitingIndex = 0;
 
         ArrayList<Integer> latestCompletionTimes = new ArrayList<>(); // store latest est. completion time 
@@ -267,7 +266,7 @@ public class Client {
 
 
     // findLeastWaitingJobs | returns the server with the least number of waiting jobs
-    public static Server findLeastWaitingJobs(ArrayList<Server> activeServers) {
+    public static Server getLeastWaitingJobs(ArrayList<Server> activeServers) {
         Server optimal = activeServers.get(0);
         int minWaitingJobs = optimal.getNumWaitingJobs();
 
@@ -282,7 +281,7 @@ public class Client {
     }
 
 
-    public static void setup() throws IOException {
+    public static void initialise() throws IOException {
         s = new Socket(hostname, serverPort); // socket with host IP of 127.0.0.1 (localhost), server port of 50000
 
         din = new InputStreamReader(s.getInputStream());
